@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.pyc
+backend/.env
+backend/eldris.sqlite3
+frontend/.env.local
+tools/cloudflared
+tools/cloudflared.exe
+backend/.venv/.eldris-deps

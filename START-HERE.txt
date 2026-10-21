@@ -1,0 +1,88 @@
+ELDRIS 3.0 — how to run and publish this download
+==================================================
+
+A. Open the dashboard on this computer (about 2 minutes)
+--------------------------------------------------------
+1. Install Python 3.10+ (Node.js is NOT needed: frontend/dist is already built).
+2. Open a terminal in this folder and run:
+
+     cd backend
+     python -m venv .venv
+     .venv\Scripts\activate        (Windows)
+     source .venv/bin/activate     (macOS / Linux)
+     pip install -r requirements.txt
+     copy .env.example .env        (Windows; use cp on macOS/Linux)
+     python app.py
+
+3. Open http://127.0.0.1:5000 — the dashboard opens as a guest, no login needed.
+
+B. Publish it for free (public HTTPS link, no account)
+------------------------------------------------------
+From the top folder, run:
+
+     publish-free.cmd              (Windows: double-click or run it)
+     ./publish-free.sh             (macOS / Linux)
+
+The script installs the backend, starts it, downloads the free Cloudflare
+tunnel client once, and prints an address like:
+
+     https://something-random.trycloudflare.com
+
+Open that on any phone or laptop. It prints the exact API_URL and
+DEVICE_API_KEY to paste into the band sketch. Keep the window open while it is
+published. The address is new each run.
+
+For a permanent URL (Render free plan) and for the named-tunnel option, read
+docs/DEPLOY-FREE.md.
+
+C. Connect the wrist band
+-------------------------
+You do NOT need the ESP32's IP address. The band connects outward to the server.
+
+Edit hardware/esp32_hand_band/esp32_hand_band.ino:
+
+     static const char *WIFI_SSID      = "your-wifi";
+     static const char *WIFI_PASSWORD   = "your-password";
+     static const char *API_URL         = "https://your-address/api/motion";
+     static const char *DEVICE_API_KEY  = "same value as on the server";
+
+Flash it, then open the serial monitor at 115200 baud. It is the only band, worn
+on the LEFT wrist, and one ESP32 reports all of it: tremor and fall (MPU6050),
+heart rate and SpO2 (MAX30102), body temperature (MLX90614). Detection runs on
+the server, so thresholds live in backend/.env.
+
+The other sketches use the same API_URL pattern:
+  hardware/esp32_home_climate  the one home temperature/humidity sensor (DHT22)
+  hardware/esp32_drive         the drive board (motors), addressed by DRIVE_ESP_IP
+  hardware/esp32_voice         the chatbot: microphone + amplifier + speaker
+
+D. Connect the chatbot board (ESP32 #4)
+---------------------------------------
+It listens on the INMP441 microphone, posts the recording to the Pi, and speaks
+the answer through the MAX98357A amplifier. Edit:
+
+     static const char *AUDIO_URL      = "https://your-address/api/voice/audio";
+     static const char *DEVICE_API_KEY = "same value as on the server";
+
+On the Pi or computer running the app, install the speech engine and the
+recogniser (the board only records; the server does the words):
+
+     pip install vosk
+     (then unzip a Vosk model into backend/ and set VOSK_MODEL in backend/.env)
+
+Hearing any of the five help phrases - help, help me, please help, i need help,
+i have fallen - raises a critical alert, opens a 30 s recording window and sends
+the robot to the patient. Set HELP_APPROACH_SECONDS=0 to stop the robot moving.
+
+E. Where the money and the limits are
+-------------------------------------
+- Tunnel option: free, no account, but your computer must stay awake and the
+  address changes per run.
+- Render free option: permanent address, no computer needed, but it sleeps
+  after 15 idle minutes and has no disk, so accounts/reminders reset on restart.
+- Cameras and robot motor control are LAN-only by design. Never expose motor
+  control on the public internet.
+
+References: docs/DEPLOY-FREE.md · docs/HARDWARE.md · docs/API.md
+
+Prototype only. Not a medical device or an emergency-response service.

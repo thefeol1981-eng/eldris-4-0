@@ -1,0 +1,10 @@
+.git
+.venv
+**/.venv
+**/__pycache__
+**/*.pyc
+**/node_modules
+**/dist
+backend/.env
+backend/eldris.sqlite3
+backend/work

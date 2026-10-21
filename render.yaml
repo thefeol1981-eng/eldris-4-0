@@ -1,0 +1,42 @@
+# Free public hosting for ELDRIS 3.0 on Render.
+#
+# The free plan has no persistent disk, so SQLite lives in /tmp and is reset
+# whenever the service restarts or redeploys. That is fine for a demo: the
+# wrist band re-reports within a second and the schema is recreated on boot.
+# For data that must survive restarts, upgrade to a paid plan and restore the
+# disk block plus DATABASE_PATH=/var/data/eldris.sqlite3.
+#
+# See docs/DEPLOY-FREE.md for the click-by-click steps and for the no-account
+# Cloudflare Tunnel option.
+services:
+  - type: web
+    name: eldris-3-0
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    envVars:
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: DEBUG
+        value: "false"
+      - key: HOST
+        value: 0.0.0.0
+      # No simulation exists in this build: every board reports for itself, and
+      # a board that has not reported stays offline.
+      - key: DATABASE_PATH
+        value: /tmp/eldris.sqlite3
+      - key: CORS_ORIGINS
+        value: ""
+      # Must match DEVICE_API_KEY in the wrist band sketch. Render asks for this
+      # value when the Blueprint is created; keep it out of the repository.
+      - key: DEVICE_API_KEY
+        sync: false
+      # The five phrases the chatbot board escalates on. The board itself posts
+      # outbound like the wrist band, so no address is configured here.
+      - key: HELP_KEYWORDS
+        value: "help,help me,please help,i need help,i have fallen"
