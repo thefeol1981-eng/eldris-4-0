@@ -1,0 +1,2 @@
+export const apiBase = import.meta.env.VITE_API_BASE_URL || '';
+export async function request<T>(path:string, init?:RequestInit):Promise<T>{const r=await fetch(`${apiBase}${path}`,{credentials:'include',headers:{'Content-Type':'application/json',...(init?.headers||{})},...init});const data=await r.json().catch(()=>({error:'Invalid server response'}));if(!r.ok)throw new Error(data.error||`Request failed (${r.status})`);return data as T;}
